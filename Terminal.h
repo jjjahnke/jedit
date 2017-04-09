@@ -13,6 +13,8 @@ private:
     static int init;
     static int screenrows;
     static int screencols;
+    static int cx;
+    static int cy;
     static termios orig_termios;
 
 public:
@@ -24,11 +26,21 @@ public:
     static void enableRawMode();
     static char editorReadKey();
     static int getWindowSize(int *rows, int *cols);
+    static int getCursorPosition(int *rows, int *cols);
     static void initTerminal();
-
     static int getScreenrows();
-
     static int getScreencols();
+    static int getCx();
+    static void setCx(int cx);
+    static void incrCx();
+    static void decrCx();
+    static void checkCx();
+    static int getCy();
+    static void setCy(int cy);
+    static void incrCy();
+    static void decrCy();
+    static void checkCy();
+
 };
 
 #endif //JEDIT_TERMINAL_H

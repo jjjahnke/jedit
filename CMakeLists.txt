@@ -3,5 +3,5 @@ project(jedit)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(SOURCE_FILES main Config Terminal EditorIO)
+set(SOURCE_FILES main Config Terminal EditorIO IOBuffer)
 add_executable(jedit ${SOURCE_FILES})

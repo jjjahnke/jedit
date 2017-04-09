@@ -6,6 +6,7 @@
 #define JEDIT_EDITORINPUT_H
 
 #include "Terminal.h"
+#include "IOBuffer.h"
 
 #define CTRL_KEY(k) ((k) & 0x1f)
 
@@ -17,6 +18,7 @@ public:
     EditorInput(Terminal *terminal);
 
     void processKeyPress();
+    void moveCursor(char key);
 };
 
 class EditorOutput {
@@ -26,7 +28,10 @@ private:
 public:
     EditorOutput(Terminal *terminal);
 
-    void drawRows();
+    void drawAbout(IOBuffer *iobuf, int width);
+    void placeCursor(IOBuffer *iobuf);
+
+    void drawRows(IOBuffer *iobuf);
     void refreshScreen();
 };
 

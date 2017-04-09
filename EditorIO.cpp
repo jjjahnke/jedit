@@ -13,34 +13,34 @@ using namespace std;
 EditorInput::EditorInput(Terminal *terminal) : terminal(terminal) {}
 
 void EditorInput::processKeyPress() {
-    char c = terminal->editorReadKey();
+    int c = terminal->readKey();
     switch(c) {
         case CTRL_KEY('q'):
             terminal->clear_terminal();
             exit(0);
             break;
 
-        case 'a':
-        case 'd':
-        case 'w':
-        case 's':
+        case ARROW_LEFT:
+        case ARROW_RIGHT:
+        case ARROW_UP:
+        case ARROW_DOWN:
             moveCursor(c);
             break;
     }
 }
 
-void EditorInput::moveCursor(char key) {
+void EditorInput::moveCursor(int key) {
     switch (key) {
-        case 'a':
+        case ARROW_LEFT:
             terminal->decrCx();
             break;
-        case 'd':
+        case ARROW_RIGHT:
             terminal->incrCx();
             break;
-        case 'w':
+        case ARROW_UP:
             terminal->decrCy();
             break;
-        case 's':
+        case ARROW_DOWN:
             terminal->incrCy();
             break;
     }
@@ -75,7 +75,7 @@ void EditorOutput::refreshScreen() {
 
 void EditorOutput::drawAbout(IOBuffer *iobuf, int width) {
     string version = JEDIT_VERSION;
-    string welcome =  "JEdit -- version " + version;
+    string welcome =  "JediT -- version " + version;
 
     int welcome_len = welcome.length();
     if(welcome_len > width) welcome_len = width;

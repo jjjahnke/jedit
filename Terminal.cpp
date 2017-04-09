@@ -46,14 +46,31 @@ void Terminal::enableRawMode() {
     if(tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) exit_on_error("tcsetattr");
 }
 
-char Terminal::editorReadKey() {
+int Terminal::readKey() {
     int nread;
     char c;
 
     while((nread = read(STDIN_FILENO, &c, 1)) != 1) {
         if(nread == -1) exit_on_error("read");
     }
-    return c;
+
+    if(c == '\x1b') {
+        char seq[3];
+        if(read(STDIN_FILENO, &seq[0],1) != 1) return '\x1b';
+        if(read(STDIN_FILENO, &seq[1],1) != 1) return '\x1b';
+
+        if(seq[0] == '[') {
+            switch(seq[1]){
+                case 'A': return ARROW_UP;
+                case 'B': return ARROW_DOWN;
+                case 'C': return ARROW_RIGHT;
+                case 'D': return ARROW_LEFT;
+            }
+        }
+        return '\x1b';
+    } else {
+        return c;
+    }
 }
 
 int Terminal::getCursorPosition(int *rows, int *cols) {
@@ -111,8 +128,8 @@ int Terminal::getScreencols() {
 }
 
 Terminal::Terminal() {
-    Terminal::init = 0;
-    Terminal::initTerminal();
+    init = 0;
+    initTerminal();
 }
 
 int Terminal::getCx() {
@@ -124,39 +141,37 @@ int Terminal::getCy() {
 }
 
 void Terminal::setCx(int cx) {
-    Terminal::cx = cx;
+    Terminal::cx = checkCx(cx);
 }
 
 void Terminal::setCy(int cy) {
-    Terminal::cy = cy;
+    Terminal::cy = checkCy(cy);
 }
 
-void Terminal::incrCx() {
-    cx++;
-    checkCx();
+void Terminal::incrCx(int move_cx) {
+    cx = checkCx(cx + move_cx);
 }
 
-void Terminal::decrCx() {
-    cx--;
-    checkCx();
+void Terminal::decrCx(int move_cx) {
+    cx = checkCx(cx - move_cx);
 }
 
-void Terminal::incrCy() {
-    cy++;
-    checkCy();
+void Terminal::incrCy(int move_cy) {
+    cy = checkCy(cy + move_cy);
 }
 
-void Terminal::decrCy() {
-    cy--;
-    checkCy();
+void Terminal::decrCy(int move_cy) {
+    cy = checkCy(cy - move_cy);
 }
 
-void Terminal::checkCx() {
-    if (cx >= screencols) cx = screencols - 1;
-    if( cx <= 1) cx = 1;
+int Terminal::checkCx(int new_cx) {
+    if (new_cx >= screencols) return screencols - 1;
+    if( new_cx <= 1) return 1;
+    return new_cx;
 }
 
-void Terminal::checkCy() {
-    if (cy >= screenrows) cy = screenrows - 1;
-    if( cy < 0) cy = 0;
+int Terminal::checkCy(int new_cy) {
+    if (new_cy >= screenrows) return screenrows - 1;
+    if( new_cy < 0) return 0;
+    return new_cy;
 }

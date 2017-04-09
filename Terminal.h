@@ -8,6 +8,13 @@
 #include <string>
 #include <termios.h>
 
+enum editorKey {
+    ARROW_LEFT = 1000,
+    ARROW_RIGHT,
+    ARROW_UP,
+    ARROW_DOWN
+};
+
 class Terminal {
 private:
     static int init;
@@ -24,7 +31,7 @@ public:
     static void exit_on_error(const std::string s);
     static void disableRawMode();
     static void enableRawMode();
-    static char editorReadKey();
+    static int readKey();
     static int getWindowSize(int *rows, int *cols);
     static int getCursorPosition(int *rows, int *cols);
     static void initTerminal();
@@ -32,14 +39,14 @@ public:
     static int getScreencols();
     static int getCx();
     static void setCx(int cx);
-    static void incrCx();
-    static void decrCx();
-    static void checkCx();
+    static void incrCx(int move_cx=1);
+    static void decrCx(int move_cx=1);
+    static int checkCx(int new_cx);
     static int getCy();
     static void setCy(int cy);
-    static void incrCy();
-    static void decrCy();
-    static void checkCy();
+    static void incrCy(int move_cy=1);
+    static void decrCy(int move_cy=1);
+    static int checkCy(int new_cy);
 
 };
 

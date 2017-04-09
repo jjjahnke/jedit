@@ -18,7 +18,7 @@ public:
     EditorInput(Terminal *terminal);
 
     void processKeyPress();
-    void moveCursor(char key);
+    void moveCursor(int key);
 };
 
 class EditorOutput {

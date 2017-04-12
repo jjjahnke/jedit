@@ -24,6 +24,10 @@ void EditorInput::processKeyPress() {
         case ARROW_RIGHT:
         case ARROW_UP:
         case ARROW_DOWN:
+        case PAGE_UP:
+        case PAGE_DOWN:
+        case HOME_KEY:
+        case END_KEY:
             moveCursor(c);
             break;
     }
@@ -42,6 +46,18 @@ void EditorInput::moveCursor(int key) {
             break;
         case ARROW_DOWN:
             terminal->incrCy();
+            break;
+        case PAGE_UP:
+            terminal->decrCy(terminal->getScreenrows());
+            break;
+        case PAGE_DOWN:
+            terminal->incrCy(terminal->getScreenrows());
+            break;
+        case HOME_KEY:
+            terminal->setCx(0);
+            break;
+        case END_KEY:
+            terminal->setCx(terminal->getScreencols());
             break;
     }
 }

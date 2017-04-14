@@ -191,7 +191,7 @@ void Terminal::decrCy(int move_cy) {
 
 int Terminal::checkCx(int new_cx) {
     if (new_cx >= screencols) return screencols - 1;
-    if( new_cx <= 1) return 1;
+    if( new_cx <= 0) return 0;
     return new_cx;
 }
 

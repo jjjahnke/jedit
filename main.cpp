@@ -7,14 +7,13 @@
 #include "Terminal.h"
 #include "EditorIO.h"
 
-int main() {
+int main(int argc, char *argv[]) {
     Terminal *t = new Terminal();
-    EditorInput *input = new EditorInput(t);
-    EditorOutput *output = new EditorOutput(t);
+    EditorOutput *output = new EditorOutput(t, nullptr, argv[1]);
 
     while(1) {
         output->refreshScreen();
-        input->processKeyPress();
+        output->getEditor_input()->processKeyPress();
     }
 
     return 0;

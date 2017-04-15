@@ -15,6 +15,7 @@ class EditorInput {
 private:
     Terminal *terminal;
     int row_offset;
+    int col_offset;
 
 public:
     EditorInput(Terminal *terminal);
@@ -26,6 +27,13 @@ public:
     void setRow_offset(int row_offset);
     void incrRow_offset(int move_rows=1);
     void decrRow_offset(int move_rows=1);
+    int getCol_offset() const;
+    void setCol_offset(int col_offset);
+    void incrCol_offset(int move_cols=1);
+    void decrCol_offset(int move_cols=1);
+
+    int mapCursorX();
+    int mapCursorY();
 
 };
 

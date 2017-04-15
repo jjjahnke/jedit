@@ -12,6 +12,7 @@ using namespace std;
 
 EditorInput::EditorInput(Terminal *terminal) : terminal(terminal) {
     this->setRow_offset(0);
+    this->setCol_offset(10);
 }
 
 void EditorInput::processKeyPress() {
@@ -38,9 +39,11 @@ void EditorInput::processKeyPress() {
 void EditorInput::moveCursor(int key) {
     switch (key) {
         case ARROW_LEFT:
+            if(terminal->getCx() == 0) decrCol_offset();
             terminal->decrCx();
             break;
         case ARROW_RIGHT:
+            if(terminal->getCx() == terminal->getScreencols() -1) incrCol_offset();
             terminal->incrCx();
             break;
         case ARROW_UP:
@@ -48,7 +51,7 @@ void EditorInput::moveCursor(int key) {
             terminal->decrCy();
             break;
         case ARROW_DOWN:
-            if(terminal->getCy() == (terminal->getScreenrows() - 1)) incrRow_offset();
+            if(terminal->getCy() == terminal->getScreenrows() - 1) incrRow_offset();
             terminal->incrCy();
             break;
         case PAGE_UP:
@@ -71,16 +74,41 @@ int EditorInput::getRow_offset() const {
 }
 
 void EditorInput::setRow_offset(int row_offset) {
-    this->row_offset = row_offset;
+    EditorInput::row_offset = row_offset;
 }
 
 void EditorInput::incrRow_offset(int move_rows) {
-    this->row_offset += move_rows;
+    row_offset += move_rows;
 }
 
 void EditorInput::decrRow_offset(int move_rows) {
-    this->row_offset -= move_rows;
+    row_offset -= move_rows;
 }
+
+int EditorInput::getCol_offset() const {
+    return col_offset;
+}
+
+void EditorInput::setCol_offset(int col_offset) {
+    EditorInput::col_offset = col_offset;
+}
+
+void EditorInput::incrCol_offset(int move_cols) {
+    col_offset += move_cols;
+}
+
+void EditorInput::decrCol_offset(int move_cols) {
+    col_offset -= move_cols;
+}
+
+int EditorInput::mapCursorX() {
+    return terminal->getCx() + col_offset;
+}
+
+int EditorInput::mapCursorY() {
+    return terminal->getCy() + row_offset;
+}
+
 
 EditorOutput::EditorOutput(Terminal *terminal, EditorInput *editor_input, char *filename) : terminal(terminal), editor_input(editor_input) {
     this->editor_input = editor_input == nullptr ? new EditorInput(terminal) : editor_input;
@@ -98,13 +126,12 @@ void EditorOutput::drawRows(IOBuffer *iobuf) {
                 iobuf->append("~", 1);
             }
         } else {
-
             EditorRow row = rows->at(file_row);
-            int len;
-
-            len = row.getSize();
+            int len = row.getSize() - editor_input->getCol_offset();
             if (len > terminal->getScreencols()) len = terminal->getScreencols();
-            iobuf->append(row.getChars(), len);
+            if( len > 0) {
+                iobuf->append(&(row.getChars()[editor_input->getCol_offset()]), len);
+            }
         }
         iobuf->append("\x1b[K", 3);
         if( y < terminal->getScreenrows() -1) {
@@ -113,13 +140,18 @@ void EditorOutput::drawRows(IOBuffer *iobuf) {
     }
 }
 
-
 void EditorOutput::drawCursorInfo(IOBuffer *iobuf) {
     char buf[128];
-    snprintf(buf, sizeof(buf), "--\r\ncurX:%d cols:%d curY:%d rows:%d row_offset:%d ", terminal->getCx(), terminal->getScreencols(), terminal->getCy(), terminal->getScreenrows(), editor_input->getRow_offset());
+    snprintf(buf, sizeof(buf), "--\r\nX:%d cols:%d Y:%d rows:%d row_off:%d col_off:%d ",
+             terminal->getCx(),
+             terminal->getScreencols(),
+             terminal->getCy(),
+             terminal->getScreenrows(),
+             editor_input->getRow_offset(),
+             editor_input->getCol_offset()
+    );
     iobuf->append(buf, strlen(buf));
 }
-
 
 void EditorOutput::refreshScreen() {
     IOBuffer iobuf;
@@ -163,10 +195,11 @@ void EditorOutput::scroll() {
     if( editor_input->getRow_offset() >= rows->size()) {
         editor_input->setRow_offset(rows->size() - 1);
     }
+    if( editor_input->getCol_offset() < 0) {
+        editor_input->setCol_offset(0);
+    }
 }
 
 EditorInput *EditorOutput::getEditor_input() const {
     return editor_input;
 }
-
-

@@ -102,11 +102,11 @@ void EditorInput::decrCol_offset(int move_cols) {
 }
 
 int EditorInput::mapCursorX() {
-    return terminal->getCx() + col_offset;
+    return terminal->getCx() + getCol_offset();
 }
 
 int EditorInput::mapCursorY() {
-    return terminal->getCy() + row_offset;
+    return terminal->getCy() + getRow_offset();
 }
 
 
@@ -129,9 +129,8 @@ void EditorOutput::drawRows(IOBuffer *iobuf) {
             EditorRow row = rows->at(file_row);
             int len = row.getSize() - editor_input->getCol_offset();
             if (len > terminal->getScreencols()) len = terminal->getScreencols();
-            if( len > 0) {
-                iobuf->append(&(row.getChars()[editor_input->getCol_offset()]), len);
-            }
+            if( len < 0)  len = 0;
+            iobuf->append(&(row.getChars()[editor_input->getCol_offset()]), len);
         }
         iobuf->append("\x1b[K", 3);
         if( y < terminal->getScreenrows() -1) {
@@ -142,13 +141,14 @@ void EditorOutput::drawRows(IOBuffer *iobuf) {
 
 void EditorOutput::drawCursorInfo(IOBuffer *iobuf) {
     char buf[128];
-    snprintf(buf, sizeof(buf), "--\r\nX:%d cols:%d Y:%d rows:%d row_off:%d col_off:%d ",
+    snprintf(buf, sizeof(buf), "--\r\nscr_loc:%d,%d map_loc:%d,%d offset:%d,%d size:%d             ",
              terminal->getCx(),
-             terminal->getScreencols(),
              terminal->getCy(),
-             terminal->getScreenrows(),
+             editor_input->mapCursorX(),
+             editor_input->mapCursorY(),
              editor_input->getRow_offset(),
-             editor_input->getCol_offset()
+             editor_input->getCol_offset(),
+             currentRowSize()
     );
     iobuf->append(buf, strlen(buf));
 }
@@ -198,6 +198,17 @@ void EditorOutput::scroll() {
     if( editor_input->getCol_offset() < 0) {
         editor_input->setCol_offset(0);
     }
+    if(editor_input->mapCursorX() > currentRowSize()) {
+        terminal->setCx(currentRowSize() - editor_input->getCol_offset());
+    }
+}
+
+int EditorOutput::currentRowSize() const {
+    int cur_row_size = 0;
+    if (editor_input->mapCursorY() <= rows->size()) {
+        cur_row_size = rows->at(editor_input->mapCursorY()).getSize();
+    }
+    return cur_row_size;
 }
 
 EditorInput *EditorOutput::getEditor_input() const {

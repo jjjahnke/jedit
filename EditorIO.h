@@ -56,6 +56,7 @@ public:
 
     EditorInput *getEditor_input() const;
 
+    int currentRowSize() const;
 };
 
 #endif //JEDIT_EDITORINPUT_H

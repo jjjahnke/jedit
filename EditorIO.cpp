@@ -12,7 +12,7 @@ using namespace std;
 
 EditorInput::EditorInput(Terminal *terminal) : terminal(terminal) {
     this->setRow_offset(0);
-    this->setCol_offset(10);
+    this->setCol_offset(0);
 }
 
 void EditorInput::processKeyPress() {
@@ -22,7 +22,6 @@ void EditorInput::processKeyPress() {
             terminal->clear_terminal();
             exit(0);
             break;
-
         case ARROW_LEFT:
         case ARROW_RIGHT:
         case ARROW_UP:
@@ -32,6 +31,8 @@ void EditorInput::processKeyPress() {
         case HOME_KEY:
         case END_KEY:
             moveCursor(c);
+            break;
+        default:
             break;
     }
 }
@@ -55,16 +56,22 @@ void EditorInput::moveCursor(int key) {
             terminal->incrCy();
             break;
         case PAGE_UP:
+            if(terminal->getCy() == 0) decrRow_offset(terminal->getScreenrows());
             terminal->decrCy(terminal->getScreenrows());
             break;
         case PAGE_DOWN:
+            if(terminal->getCy() == terminal->getScreenrows() - 1) incrRow_offset(terminal->getScreenrows());
             terminal->incrCy(terminal->getScreenrows());
             break;
         case HOME_KEY:
+            if(terminal->getCx() == 0) decrCol_offset(terminal->getScreencols());
             terminal->setCx(0);
             break;
         case END_KEY:
+            if(terminal->getCx() == terminal->getScreencols() -1) incrCol_offset(terminal->getScreencols());
             terminal->setCx(terminal->getScreencols());
+            break;
+        default:
             break;
     }
 }
@@ -127,10 +134,10 @@ void EditorOutput::drawRows(IOBuffer *iobuf) {
             }
         } else {
             EditorRow row = rows->at(file_row);
-            int len = row.getSize() - editor_input->getCol_offset();
+            int len = row.getRender_size() - editor_input->getCol_offset();
             if (len > terminal->getScreencols()) len = terminal->getScreencols();
             if( len < 0)  len = 0;
-            iobuf->append(&(row.getChars()[editor_input->getCol_offset()]), len);
+            iobuf->append(&(row.getRender_chars()[editor_input->getCol_offset()]), len);
         }
         iobuf->append("\x1b[K", 3);
         if( y < terminal->getScreenrows() -1) {
@@ -141,14 +148,15 @@ void EditorOutput::drawRows(IOBuffer *iobuf) {
 
 void EditorOutput::drawCursorInfo(IOBuffer *iobuf) {
     char buf[128];
-    snprintf(buf, sizeof(buf), "--\r\nscr_loc:%d,%d map_loc:%d,%d offset:%d,%d size:%d             ",
+    snprintf(buf, sizeof(buf), "--\r\nscr_loc:%d,%d map_loc:%d,%d offset:%d,%d size:%d|%d            ",
              terminal->getCx(),
              terminal->getCy(),
              editor_input->mapCursorX(),
              editor_input->mapCursorY(),
              editor_input->getRow_offset(),
              editor_input->getCol_offset(),
-             currentRowSize()
+             currentRenderRowSize(),
+             currentCharRowSize()
     );
     iobuf->append(buf, strlen(buf));
 }
@@ -184,7 +192,8 @@ void EditorOutput::drawAbout(IOBuffer *iobuf, int width) {
 
 void EditorOutput::placeCursor(IOBuffer *iobuf) {
     char buf[32];
-    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", terminal->getCy() + 1, terminal->getCx() + 1);
+    int mapped_cursor = rows->at(terminal->getCy()).mapCharToRender(terminal->getCx());
+    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", terminal->getCy() + 1, mapped_cursor + 1);
     iobuf->append(buf, strlen(buf));
 }
 
@@ -198,19 +207,27 @@ void EditorOutput::scroll() {
     if( editor_input->getCol_offset() < 0) {
         editor_input->setCol_offset(0);
     }
-    if(editor_input->mapCursorX() > currentRowSize()) {
-        terminal->setCx(currentRowSize() - editor_input->getCol_offset());
+    if(editor_input->mapCursorX() > currentCharRowSize()) {
+        terminal->setCx(currentCharRowSize() - editor_input->getCol_offset());
     }
 }
 
-int EditorOutput::currentRowSize() const {
+int EditorOutput::currentRenderRowSize() const {
     int cur_row_size = 0;
-    if (editor_input->mapCursorY() <= rows->size()) {
-        cur_row_size = rows->at(editor_input->mapCursorY()).getSize();
+    if (editor_input->mapCursorY() < rows->size()) {
+        cur_row_size = rows->at(editor_input->mapCursorY()).getRender_size();
     }
     return cur_row_size;
 }
 
 EditorInput *EditorOutput::getEditor_input() const {
     return editor_input;
+}
+
+int EditorOutput::currentCharRowSize() const {
+    int cur_row_size = 0;
+    if (editor_input->mapCursorY() < rows->size()) {
+        cur_row_size = rows->at(editor_input->mapCursorY()).getSize();
+    }
+    return cur_row_size;
 }

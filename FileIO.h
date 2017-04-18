@@ -12,22 +12,35 @@ class EditorRow {
 private:
     int size;
     char *chars;
-    int num_rows;
+
+    int render_size;
+    char *render_chars;
+    int *render_map;
+    int *char_map;
+
+    static const int tab_stop = 4;
+
+    int computeTabStop(const int start);
+
 
 public:
-    void addRow(int size, const char *chars);
+    EditorRow(int size, const char *chars);
 
     int getSize() const;
-
     void setSize(int size);
 
     char *getChars() const;
-
     void setChars(char *chars);
 
-    int getNum_rows() const;
+    void render();
 
-    void setNum_rows(int num_rows);
+    int getRender_size() const;
+    char *getRender_chars() const;
+
+    int *getRender_map() const;
+    int *getChar_map() const;
+
+    int mapCharToRender(const int curLoc) const;
 };
 
 class FileIO {
